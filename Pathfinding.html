@@ -1,0 +1,350 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>Canvas Test</title>
+<style type="text/css">
+canvas {
+    -webkit-tap-highlight-color: transparent;
+}
+</style>
+<script src="http://localhost/~broderickhyman/Scripts/jquery-2.0.3.js"></script>
+</head>
+<body>
+
+<div>
+<canvas id="canvas" width="200" height="200" style="position:absolute;">
+This text is displayed if your browser does not support HTML5 Canvas.
+</canvas>
+</div>
+
+<script type="text/javascript">
+var canvas;
+var ctx;
+var dx = 1;
+var dy = 1;
+var x = 150;
+var y = 100;
+var rows = 70;//15;
+var columns = 100;//25;
+var WIDTH = 1000;
+var HEIGHT = 700;
+$("#canvas").attr("width",WIDTH);
+$("#canvas").attr("height",HEIGHT);
+var mousePos;
+var message;
+for(var tiles = [];tiles.length < columns; tiles.push([]));
+var openList = [];
+var closedList = [];
+var startTile = null;
+var endTile = null;
+// var tiles = [[]];
+
+function tile(x,y,w,h,r,c){
+	this.x = x;
+	this.y = y;
+	this.w = w;
+	this.h = h;
+	this.row = r;
+	this.col = c;
+	this.start = false;
+	this.end = false;
+	this.wall = false;
+	this.searched = false;
+	this.walkable = true;
+	var rand = Math.floor((Math.random()*5)+1);
+	if(rand == 1){
+		this.walkable = false;
+	}
+	this.path = false;
+	this.f = 0;
+	this.g = 0;
+	this.dist = 0;
+	this.parent = null;
+}
+
+function rect(x,y,w,h) {
+ctx.beginPath();
+ctx.rect(x,y,w,h);
+ctx.closePath();
+ctx.fill();
+ctx.stroke();
+}
+
+
+function clear() {
+ctx.clearRect(0, 0, WIDTH, HEIGHT);
+}
+
+function init() {
+canvas = document.getElementById("canvas");
+ctx = canvas.getContext("2d");
+for(var i=0; i < columns; i++){
+	for(var j=0; j < rows; j++){
+		tiles[i][j]=new tile(10*i,HEIGHT-10-10*j,10,10,j,i);
+		if(i == 0 || i == columns-1 || j == 0 || j == rows-1){
+			tiles[i][j].walkable = false;
+		}
+	}
+}
+
+startTile = tiles[1][2];
+startTile.start = true;
+startTile.walkable = true;
+endTile = tiles[columns-2][rows-3];
+endTile.end = true;
+endTile.walkable = true;
+tiles[8][0].walkable = false;
+tiles[8][1].walkable = false;
+tiles[8][2].walkable = false;
+tiles[8][3].walkable = false;
+tiles[8][4].walkable = false;
+tiles[8][5].walkable = false;
+tiles[8][6].walkable = false;
+tiles[8][7].walkable = false;
+
+tiles[16][14].walkable = false;
+tiles[16][13].walkable = false;
+tiles[16][12].walkable = false;
+tiles[16][11].walkable = false;
+tiles[16][10].walkable = false;
+tiles[16][9].walkable = false;
+tiles[16][8].walkable = false;
+// alert(endTile.col);
+// tiles[5][4].walkable = false;
+// tiles[5][5].walkable = false;
+// tiles[5][6].walkable = false;
+return setInterval(draw, 500);
+}
+
+function getMousePos(canvas, evt) {
+    var rect = canvas.getBoundingClientRect();
+    return {
+    	x: evt.clientX - rect.left,
+        y: evt.clientY - rect.top
+    };
+}
+
+function getDist(i){
+	return (Math.abs(endTile.row-openList[i].row) + Math.abs(endTile.col-openList[i].col))*10;
+}
+
+function sleep(milliseconds) {
+  var start = new Date().getTime();
+  for (var i = 0; i < 1e7; i++) {
+    if ((new Date().getTime() - start) > milliseconds){
+      break;
+    }
+  }
+}
+
+function pathfind(){
+	closedList = [];
+	openList = [];
+	startTile.g = 0;
+	startTile.dist = (Math.abs(endTile.row-startTile.row) + Math.abs(endTile.col-startTile.col))*10;
+	startTile.f = startTile.g + startTile.dist;
+	openList.push(startTile);
+	var bestNode = null;
+	var searchTile = null;
+	var bestDistance = 99999;
+	// alert("hello");
+	while(jQuery.inArray(endTile,closedList) < 0 && openList.length > 0){
+		// alert(openList.length);
+		// sleep(10);
+		bestDistance = 99999;
+		for(var i = 0; i < openList.length; i++){
+			if(openList[i].dist < bestDistance){
+				bestDistance = openList[i].dist;
+				bestNode = openList[i];
+			}
+		}
+		var index = openList.indexOf(bestNode);
+		openList.splice(index, 1);
+		closedList.push(bestNode);
+		if(jQuery.inArray(endTile,closedList) >= 0){
+			bestNode = bestNode.parent;
+			while(bestNode.parent != null){
+				bestNode.path = true;
+				bestNode = bestNode.parent;
+				// console.log("hello");
+			}
+			break;
+		}
+		var aRow = bestNode.row;
+		var aCol = bestNode.col;
+		searchTile = tiles[aCol-1][aRow];
+		// alert(jQuery.inArray(searchTile,closedList));
+		if(searchTile.walkable == true && jQuery.inArray(searchTile,closedList) < 0){
+			index = jQuery.inArray(searchTile,openList);
+			if(index > -1){
+				// if(openList[index].g > searchTile.g){
+				// 	openList[index].parent = searchTile;
+				// 	openList[index].g = searchTile.parent.g + 10;
+				// 	searchTile.f = searchTile.g + searchTile.dist;
+				// }
+			}
+			else{
+				searchTile.parent = tiles[aCol][aRow];
+				searchTile.g = searchTile.parent.g + 10;
+				searchTile.dist = (Math.abs(endTile.row-searchTile.row) + Math.abs(endTile.col-searchTile.col))*10;
+				searchTile.f = searchTile.g + searchTile.dist;
+				searchTile.searched = true;
+				openList.push(searchTile);
+			}
+		}
+		searchTile = tiles[aCol+1][aRow];
+		if(searchTile.walkable == true && jQuery.inArray(searchTile,closedList) < 0){
+			index = jQuery.inArray(searchTile,openList);
+			if(index > -1){
+				// if(openList[index].g > searchTile.g){
+				// 	openList[index].parent = searchTile;
+				// 	openList[index].g = searchTile.parent.g + 10;
+				// 	searchTile.f = searchTile.g + searchTile.dist;
+				// }
+			}
+			else{
+				searchTile.parent = tiles[aCol][aRow];
+				searchTile.g = searchTile.parent.g + 10;
+				searchTile.dist = (Math.abs(endTile.row-searchTile.row) + Math.abs(endTile.col-searchTile.col))*10;
+				searchTile.f = searchTile.g + searchTile.dist;
+				searchTile.searched = true;
+				openList.push(searchTile);
+			}
+		}
+		searchTile = tiles[aCol][aRow-1];
+		if(searchTile.walkable == true && jQuery.inArray(searchTile,closedList) < 0){
+			index = jQuery.inArray(searchTile,openList);
+			if(index > -1){
+				// if(openList[index].g > searchTile.g){
+				// 	openList[index].parent = searchTile;
+				// 	openList[index].g = searchTile.parent.g + 10;
+				// 	searchTile.f = searchTile.g + searchTile.dist;
+				// }
+			}
+			else{
+				searchTile.parent = tiles[aCol][aRow];
+				searchTile.g = searchTile.parent.g + 10;
+				searchTile.dist = (Math.abs(endTile.row-searchTile.row) + Math.abs(endTile.col-searchTile.col))*10;
+				searchTile.f = searchTile.g + searchTile.dist;
+				searchTile.searched = true;
+				openList.push(searchTile);
+			}
+		}
+		searchTile = tiles[aCol][aRow+1];
+		if(searchTile.walkable == true && jQuery.inArray(searchTile,closedList) < 0){
+			index = jQuery.inArray(searchTile,openList);
+			if(index > -1){
+				// if(openList[index].g > searchTile.g){
+				// 	openList[index].parent = searchTile;
+				// 	openList[index].g = searchTile.parent.g + 10;
+				// 	searchTile.f = searchTile.g + searchTile.dist;
+				// }
+			}
+			else{
+				searchTile.parent = tiles[aCol][aRow];
+				searchTile.g = searchTile.parent.g + 10;
+				searchTile.dist = (Math.abs(endTile.row-searchTile.row) + Math.abs(endTile.col-searchTile.col))*10;
+				searchTile.f = searchTile.g + searchTile.dist;
+				searchTile.searched = true;
+				openList.push(searchTile);
+			}
+		}
+		// for(var i=-1; i <= 1; i+=1){
+		// 	for(var j=-1; j <= 1; j+=1){
+		// 		if(tiles[aCol+i][aRow+j].walkable == true && jQuery.inArray(tiles[aCol+i][aRow+j],closedList > -1)){
+		// 			openList.push(tiles[aCol+i][aRow+j]);
+		// 			tiles[aCol+i][aRow+j].searched = true;
+		// 		}
+		// 	}
+		// }
+		// alert(openList.length);
+		// break;
+	}
+}
+
+function draw() {
+	clear();
+	ctx.font="10px Arial";
+	ctx.fillStyle = "white";
+	ctx.strokeStyle = "black";
+	ctx.lineWidth = 1;
+	rect(0,0,WIDTH,HEIGHT);
+
+	ctx.moveTo(WIDTH/2,0);
+	ctx.lineTo(WIDTH/2,HEIGHT);
+	ctx.moveTo(0,HEIGHT/2);
+	ctx.lineTo(WIDTH,HEIGHT/2);
+	ctx.stroke();
+
+	ctx.lineWidth = 2;
+	l = tiles.length;
+	for(var i=0; i < columns; i++){
+		for(var j=0; j < rows; j++){
+			if(tiles[i][j].start == true){
+				ctx.fillStyle = "green";
+			}else{
+				if(tiles[i][j].end == true){
+					ctx.fillStyle = "red";
+				}
+				else{
+					if(tiles[i][j].searched == true){
+						ctx.fillStyle = "purple";
+					}
+					else{
+						if(tiles[i][j].walkable == true){
+							ctx.fillStyle = "lightgray";
+						}
+						else{
+							ctx.fillStyle = "black";
+						}
+					}
+				}
+			}
+			if(tiles[i][j].path == true){
+				ctx.fillStyle = "blue";
+			}
+			ctx.fillRect(tiles[i][j].x, tiles[i][j].y, tiles[i][j].w, tiles[i][j].h);
+			ctx.strokeStyle = "black";
+			ctx.strokeRect(tiles[i][j].x, tiles[i][j].y, tiles[i][j].w, tiles[i][j].h);
+			
+		}
+	}
+	// for(var i=0; i < columns; i++){
+	// 	for(var j=0; j < rows; j++){
+	// 		ctx.fillText(tiles[i][j].f,tiles[i][j].x+8,tiles[i][j].y+10);
+	// 		ctx.fillText(tiles[i][j].g,tiles[i][j].x+8,tiles[i][j].y+20);
+	// 		ctx.fillText(tiles[i][j].dist,tiles[i][j].x+8,tiles[i][j].y+30);
+	// 	}
+	// }
+}
+
+init();
+pathfind();
+canvas.addEventListener('dblclick',function dblclick(){
+	for(var i=0; i < columns; i++){
+	for(var j=0; j < rows; j++){
+		tiles[i][j]=new tile(10*i,HEIGHT-10-10*j,10,10,j,i);
+		if(i == 0 || i == columns-1 || j == 0 || j == rows-1){
+			tiles[i][j].walkable = false;
+		}
+	}
+}
+
+startTile = tiles[1][2];
+startTile.start = true;
+startTile.walkable = true;
+endTile = tiles[columns-2][rows-3];
+endTile.end = true;
+endTile.walkable = true;
+// pathfind();
+},false);
+
+canvas.addEventListener('click', function click(evt){
+	mousePos = getMousePos(canvas, evt);
+	pathfind();
+}, false);
+</script>
+
+</body>
+</html>
