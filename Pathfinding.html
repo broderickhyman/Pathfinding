@@ -25,12 +25,22 @@ var dx = 1;
 var dy = 1;
 var x = 150;
 var y = 100;
-var rows = 70;//15;
-var columns = 100;//25;
-var WIDTH = 1000;
-var HEIGHT = 700;
+var rows = 20;
+var columns = 20;
+var WIDTH = window.innerWidth;
+var HEIGHT = window.innerHeight;
 $("#canvas").attr("width",WIDTH);
 $("#canvas").attr("height",HEIGHT);
+var tileHeight = HEIGHT/rows;
+var tileWidth = WIDTH/columns;
+if(tileHeight < tileWidth){
+	columns = Math.round(WIDTH/tileHeight);
+	tileWidth = tileHeight;
+}
+else{
+	rows = Math.round(HEIGHT/tileWidth);
+	tileHeight = tileWidth;
+}
 var mousePos;
 var message;
 for(var tiles = [];tiles.length < columns; tiles.push([]));
@@ -52,7 +62,7 @@ function tile(x,y,w,h,r,c){
 	this.wall = false;
 	this.searched = false;
 	this.walkable = true;
-	var rand = Math.floor((Math.random()*5)+1);
+	var rand = Math.floor((Math.random()*4)+1);
 	if(rand == 1){
 		this.walkable = false;
 	}
@@ -81,7 +91,9 @@ canvas = document.getElementById("canvas");
 ctx = canvas.getContext("2d");
 for(var i=0; i < columns; i++){
 	for(var j=0; j < rows; j++){
-		tiles[i][j]=new tile(10*i,HEIGHT-10-10*j,10,10,j,i);
+		tileHeight = HEIGHT/rows;
+		tileWidth = WIDTH/columns;
+		tiles[i][j]=new tile(tileWidth*i,HEIGHT-tileHeight-tileHeight*j,tileWidth,tileHeight,j,i);
 		if(i == 0 || i == columns-1 || j == 0 || j == rows-1){
 			tiles[i][j].walkable = false;
 		}
@@ -94,22 +106,22 @@ startTile.walkable = true;
 endTile = tiles[columns-2][rows-3];
 endTile.end = true;
 endTile.walkable = true;
-tiles[8][0].walkable = false;
-tiles[8][1].walkable = false;
-tiles[8][2].walkable = false;
-tiles[8][3].walkable = false;
-tiles[8][4].walkable = false;
-tiles[8][5].walkable = false;
-tiles[8][6].walkable = false;
-tiles[8][7].walkable = false;
+// tiles[8][0].walkable = false;
+// tiles[8][1].walkable = false;
+// tiles[8][2].walkable = false;
+// tiles[8][3].walkable = false;
+// tiles[8][4].walkable = false;
+// tiles[8][5].walkable = false;
+// tiles[8][6].walkable = false;
+// tiles[8][7].walkable = false;
 
-tiles[16][14].walkable = false;
-tiles[16][13].walkable = false;
-tiles[16][12].walkable = false;
-tiles[16][11].walkable = false;
-tiles[16][10].walkable = false;
-tiles[16][9].walkable = false;
-tiles[16][8].walkable = false;
+// tiles[16][14].walkable = false;
+// tiles[16][13].walkable = false;
+// tiles[16][12].walkable = false;
+// tiles[16][11].walkable = false;
+// tiles[16][10].walkable = false;
+// tiles[16][9].walkable = false;
+// tiles[16][8].walkable = false;
 // alert(endTile.col);
 // tiles[5][4].walkable = false;
 // tiles[5][5].walkable = false;
@@ -177,17 +189,12 @@ function pathfind(){
 		// alert(jQuery.inArray(searchTile,closedList));
 		if(searchTile.walkable == true && jQuery.inArray(searchTile,closedList) < 0){
 			index = jQuery.inArray(searchTile,openList);
-			if(index > -1){
-				// if(openList[index].g > searchTile.g){
-				// 	openList[index].parent = searchTile;
-				// 	openList[index].g = searchTile.parent.g + 10;
-				// 	searchTile.f = searchTile.g + searchTile.dist;
-				// }
-			}
-			else{
+			// console.log(index);
+			if(index == -1){
 				searchTile.parent = tiles[aCol][aRow];
 				searchTile.g = searchTile.parent.g + 10;
-				searchTile.dist = (Math.abs(endTile.row-searchTile.row) + Math.abs(endTile.col-searchTile.col))*10;
+				// searchTile.dist = (Math.abs(endTile.row-searchTile.row) + Math.abs(endTile.col-searchTile.col))*10;
+				searchTile.dist = Math.sqrt(Math.pow(Math.abs(endTile.row-searchTile.row),2)+Math.pow(Math.abs(endTile.col-searchTile.col),2))*10;
 				searchTile.f = searchTile.g + searchTile.dist;
 				searchTile.searched = true;
 				openList.push(searchTile);
@@ -196,17 +203,11 @@ function pathfind(){
 		searchTile = tiles[aCol+1][aRow];
 		if(searchTile.walkable == true && jQuery.inArray(searchTile,closedList) < 0){
 			index = jQuery.inArray(searchTile,openList);
-			if(index > -1){
-				// if(openList[index].g > searchTile.g){
-				// 	openList[index].parent = searchTile;
-				// 	openList[index].g = searchTile.parent.g + 10;
-				// 	searchTile.f = searchTile.g + searchTile.dist;
-				// }
-			}
-			else{
+			if(index == -1){
 				searchTile.parent = tiles[aCol][aRow];
 				searchTile.g = searchTile.parent.g + 10;
-				searchTile.dist = (Math.abs(endTile.row-searchTile.row) + Math.abs(endTile.col-searchTile.col))*10;
+				// searchTile.dist = (Math.abs(endTile.row-searchTile.row) + Math.abs(endTile.col-searchTile.col))*10;
+				searchTile.dist = Math.sqrt(Math.pow(Math.abs(endTile.row-searchTile.row),2)+Math.pow(Math.abs(endTile.col-searchTile.col),2))*10;
 				searchTile.f = searchTile.g + searchTile.dist;
 				searchTile.searched = true;
 				openList.push(searchTile);
@@ -215,17 +216,11 @@ function pathfind(){
 		searchTile = tiles[aCol][aRow-1];
 		if(searchTile.walkable == true && jQuery.inArray(searchTile,closedList) < 0){
 			index = jQuery.inArray(searchTile,openList);
-			if(index > -1){
-				// if(openList[index].g > searchTile.g){
-				// 	openList[index].parent = searchTile;
-				// 	openList[index].g = searchTile.parent.g + 10;
-				// 	searchTile.f = searchTile.g + searchTile.dist;
-				// }
-			}
-			else{
+			if(index == -1){
 				searchTile.parent = tiles[aCol][aRow];
 				searchTile.g = searchTile.parent.g + 10;
-				searchTile.dist = (Math.abs(endTile.row-searchTile.row) + Math.abs(endTile.col-searchTile.col))*10;
+				// searchTile.dist = (Math.abs(endTile.row-searchTile.row) + Math.abs(endTile.col-searchTile.col))*10;
+				searchTile.dist = Math.sqrt(Math.pow(Math.abs(endTile.row-searchTile.row),2)+Math.pow(Math.abs(endTile.col-searchTile.col),2))*10;
 				searchTile.f = searchTile.g + searchTile.dist;
 				searchTile.searched = true;
 				openList.push(searchTile);
@@ -234,32 +229,16 @@ function pathfind(){
 		searchTile = tiles[aCol][aRow+1];
 		if(searchTile.walkable == true && jQuery.inArray(searchTile,closedList) < 0){
 			index = jQuery.inArray(searchTile,openList);
-			if(index > -1){
-				// if(openList[index].g > searchTile.g){
-				// 	openList[index].parent = searchTile;
-				// 	openList[index].g = searchTile.parent.g + 10;
-				// 	searchTile.f = searchTile.g + searchTile.dist;
-				// }
-			}
-			else{
+			if(index == -1){
 				searchTile.parent = tiles[aCol][aRow];
 				searchTile.g = searchTile.parent.g + 10;
-				searchTile.dist = (Math.abs(endTile.row-searchTile.row) + Math.abs(endTile.col-searchTile.col))*10;
+				// searchTile.dist = (Math.abs(endTile.row-searchTile.row) + Math.abs(endTile.col-searchTile.col))*10;
+				searchTile.dist = Math.sqrt(Math.pow(Math.abs(endTile.row-searchTile.row),2)+Math.pow(Math.abs(endTile.col-searchTile.col),2))*10;
 				searchTile.f = searchTile.g + searchTile.dist;
 				searchTile.searched = true;
 				openList.push(searchTile);
 			}
 		}
-		// for(var i=-1; i <= 1; i+=1){
-		// 	for(var j=-1; j <= 1; j+=1){
-		// 		if(tiles[aCol+i][aRow+j].walkable == true && jQuery.inArray(tiles[aCol+i][aRow+j],closedList > -1)){
-		// 			openList.push(tiles[aCol+i][aRow+j]);
-		// 			tiles[aCol+i][aRow+j].searched = true;
-		// 		}
-		// 	}
-		// }
-		// alert(openList.length);
-		// break;
 	}
 }
 
@@ -310,39 +289,41 @@ function draw() {
 			
 		}
 	}
-	// for(var i=0; i < columns; i++){
-	// 	for(var j=0; j < rows; j++){
-	// 		ctx.fillText(tiles[i][j].f,tiles[i][j].x+8,tiles[i][j].y+10);
-	// 		ctx.fillText(tiles[i][j].g,tiles[i][j].x+8,tiles[i][j].y+20);
-	// 		ctx.fillText(tiles[i][j].dist,tiles[i][j].x+8,tiles[i][j].y+30);
-	// 	}
-	// }
+	for(var i=0; i < columns; i++){
+		for(var j=0; j < rows; j++){
+			ctx.fillText(Math.round(tiles[i][j].f),tiles[i][j].x+8,tiles[i][j].y+10);
+			ctx.fillText(Math.round(tiles[i][j].g),tiles[i][j].x+8,tiles[i][j].y+20);
+			ctx.fillText(Math.round(tiles[i][j].dist),tiles[i][j].x+8,tiles[i][j].y+30);
+		}
+	}
 }
 
 init();
 pathfind();
 canvas.addEventListener('dblclick',function dblclick(){
 	for(var i=0; i < columns; i++){
-	for(var j=0; j < rows; j++){
-		tiles[i][j]=new tile(10*i,HEIGHT-10-10*j,10,10,j,i);
-		if(i == 0 || i == columns-1 || j == 0 || j == rows-1){
-			tiles[i][j].walkable = false;
+		for(var j=0; j < rows; j++){
+			tileHeight = HEIGHT/rows;
+			tileWidth = WIDTH/columns;
+			tiles[i][j]=new tile(tileWidth*i,HEIGHT-tileHeight-tileHeight*j,tileWidth,tileHeight,j,i);
+			if(i == 0 || i == columns-1 || j == 0 || j == rows-1){
+				tiles[i][j].walkable = false;
+			}
 		}
 	}
-}
 
-startTile = tiles[1][2];
-startTile.start = true;
-startTile.walkable = true;
-endTile = tiles[columns-2][rows-3];
-endTile.end = true;
-endTile.walkable = true;
-// pathfind();
+	startTile = tiles[1][2];
+	startTile.start = true;
+	startTile.walkable = true;
+	endTile = tiles[columns-2][rows-3];
+	endTile.end = true;
+	endTile.walkable = true;
+	pathfind();
 },false);
 
 canvas.addEventListener('click', function click(evt){
 	mousePos = getMousePos(canvas, evt);
-	pathfind();
+	// pathfind();
 }, false);
 </script>
 
