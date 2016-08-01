@@ -8,7 +8,7 @@ canvas {
     -webkit-tap-highlight-color: transparent;
 }
 </style>
-<script src="http://localhost/~broderickhyman/Scripts/jquery-2.0.3.js"></script>
+<script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -86,7 +86,7 @@ function clear() {
 ctx.clearRect(0, 0, WIDTH, HEIGHT);
 }
 
-function init() {
+function reset() {
 canvas = document.getElementById("canvas");
 ctx = canvas.getContext("2d");
 for(var i=0; i < columns; i++){
@@ -286,7 +286,7 @@ function draw() {
 			ctx.fillRect(tiles[i][j].x, tiles[i][j].y, tiles[i][j].w, tiles[i][j].h);
 			ctx.strokeStyle = "black";
 			ctx.strokeRect(tiles[i][j].x, tiles[i][j].y, tiles[i][j].w, tiles[i][j].h);
-			
+
 		}
 	}
 	for(var i=0; i < columns; i++){
@@ -298,32 +298,17 @@ function draw() {
 	}
 }
 
-init();
+reset();
 pathfind();
 canvas.addEventListener('dblclick',function dblclick(){
-	for(var i=0; i < columns; i++){
-		for(var j=0; j < rows; j++){
-			tileHeight = HEIGHT/rows;
-			tileWidth = WIDTH/columns;
-			tiles[i][j]=new tile(tileWidth*i,HEIGHT-tileHeight-tileHeight*j,tileWidth,tileHeight,j,i);
-			if(i == 0 || i == columns-1 || j == 0 || j == rows-1){
-				tiles[i][j].walkable = false;
-			}
-		}
-	}
-
-	startTile = tiles[1][2];
-	startTile.start = true;
-	startTile.walkable = true;
-	endTile = tiles[columns-2][rows-3];
-	endTile.end = true;
-	endTile.walkable = true;
-	pathfind();
+	// reset();
+	// pathfind();
 },false);
 
 canvas.addEventListener('click', function click(evt){
-	mousePos = getMousePos(canvas, evt);
-	// pathfind();
+	// mousePos = getMousePos(canvas, evt);
+    reset();
+	pathfind();
 }, false);
 </script>
 
